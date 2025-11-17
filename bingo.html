@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bingo Card Generator / Bingo-kaart generator</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 1rem;
+      background: #f5f5f5;
+      color: #000;
+    }
+
+    .app {
+      max-width: 210mm;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 1rem;
+      font-size: 1.4rem;
+    }
+
+    .subtitle {
+      text-align: center;
+      margin-top: -0.5rem;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      color: #555;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.75rem;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    input,
+    select {
+      padding: 0.35rem 0.5rem;
+      border: 1px solid #bbb;
+      border-radius: 4px;
+      background: #fff;
+      font-size: 0.9rem;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-end;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 0.45rem 0.9rem;
+      border-radius: 999px;
+      border: 1px solid #000;
+      background: #000;
+      color: #fff;
+      font-size: 0.9rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    button.secondary {
+      background: #fff;
+      color: #000;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .cards-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: -4mm;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #000;
+      border-radius: 4px;
+      padding: 4mm 4mm 6mm;
+      margin: 4mm;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      page-break-inside: avoid;
+    }
+
+    .card-small {
+      width: calc(50% - 8mm);
+    }
+
+    .card-large {
+      width: calc(100% - 8mm);
+    }
+
+    h2.card-title {
+      margin: 0 0 3mm;
+      font-size: 1rem;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    td {
+      border: 1px dotted #000;
+      padding: 4mm;
+      font-size: 1rem;
+      text-align: center;
+    }
+
+    @page {
+      size: A4;
+      margin: 6mm;
+    }
+
+    @media print {
+      body {
+        padding: 0;
+        background: #fff;
+      }
+
+      .controls,
+      h1,
+      .subtitle {
+        display: none;
+      }
+
+      .app {
+        max-width: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>Bingo Card Generator / Bingo-kaart generator</h1>
+    <div class="subtitle">Generate printable bingo cards / Genereer afdrukbare bingo-kaarten</div>
+
+    <div class="controls">
+      <div class="control-group">
+        <label for="balls">
+          Balls (1..N) / Aantal ballen (1..N)
+        </label>
+        <input id="balls" type="number" value="50" min="1" />
+      </div>
+
+      <div class="control-group">
+        <label for="columns">
+          Columns per card / Kolommen per kaart
+        </label>
+        <input id="columns" type="number" value="5" min="1" />
+      </div>
+
+      <div class="control-group">
+        <label for="rows">
+          Rows per card / Rijen per kaart
+        </label>
+        <input id="rows" type="number" value="4" min="1" />
+      </div>
+
+      <div class="control-group">
+        <label for="cards">
+          Number of cards / Aantal kaarten
+        </label>
+        <input id="cards" type="number" value="60" min="1" />
+      </div>
+
+      <div class="control-group">
+        <label for="title">
+          Text above card / Tekst boven de kaart
+        </label>
+        <input id="title" type="text" value="Bingo!" />
+      </div>
+
+      <div class="control-group">
+        <label for="size">
+          Card size / Kaartgrootte
+        </label>
+        <select id="size">
+          <option value="small">
+            Normal (2 per page) / Normaal (2 per pagina)
+          </option>
+          <option value="large">
+            Large (1 per page) / Groot (1 per pagina)
+          </option>
+        </select>
+      </div>
+
+      <div class="control-group buttons">
+        <button id="generate">
+          Generate cards / Kaarten genereren
+        </button>
+        <button id="print" class="secondary">
+          Print / Printen
+        </button>
+      </div>
+    </div>
+
+    <div id="cardsContainer" class="cards-container"></div>
+  </div>
+
+  <script>
+    const ballsInput = document.getElementById("balls");
+    const columnsInput = document.getElementById("columns");
+    const rowsInput = document.getElementById("rows");
+    const cardsInput = document.getElementById("cards");
+    const titleInput = document.getElementById("title");
+    const sizeSelect = document.getElementById("size");
+    const container = document.getElementById("cardsContainer");
+    const generateButton = document.getElementById("generate");
+    const printButton = document.getElementById("print");
+
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const tmp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = tmp;
+      }
+      return arr;
+    }
+
+    function generateCards() {
+      const ballCount = Math.max(1, parseInt(ballsInput.value || "0", 10));
+      const colsCount = Math.max(1, parseInt(columnsInput.value || "0", 10));
+      const rowsCount = Math.max(1, parseInt(rowsInput.value || "0", 10));
+      const cardCount = Math.max(1, parseInt(cardsInput.value || "0", 10));
+      const titleText = titleInput.value.trim() || "Bingo!";
+      const size = sizeSelect.value === "large" ? "card-large" : "card-small";
+
+      const cellsNeeded = rowsCount * colsCount;
+      if (cellsNeeded > ballCount) {
+        alert(
+          "Rows × columns cannot exceed amount of balls.\n" +
+          "Rijen × kolommen mag niet groter zijn dan het aantal ballen."
+        );
+        return;
+      }
+
+      container.innerHTML = "";
+
+      for (let c = 0; c < cardCount; c++) {
+        const numbers = shuffle(
+          Array.from({ length: ballCount }, (_, i) => i + 1)
+        );
+
+        const card = document.createElement("div");
+        card.className = "card " + size;
+
+        const heading = document.createElement("h2");
+        heading.className = "card-title";
+        heading.textContent = titleText;
+        card.appendChild(heading);
+
+        const table = document.createElement("table");
+
+        let index = 0;
+        for (let r = 0; r < rowsCount; r++) {
+          const tr = document.createElement("tr");
+          for (let col = 0; col < colsCount; col++) {
+            const td = document.createElement("td");
+            td.textContent = String(numbers[index]);
+            index++;
+            tr.appendChild(td);
+          }
+          table.appendChild(tr);
+        }
+
+        card.appendChild(table);
+        container.appendChild(card);
+      }
+    }
+
+    generateButton.addEventListener("click", generateCards);
+
+    printButton.addEventListener("click", function () {
+      if (!container.children.length) {
+        generateCards();
+      }
+      window.print();
+    });
+
+    generateCards();
+  </script>
+</body>
+</html>
+
