@@ -6,6 +6,7 @@ const generate = () => {
     .value.split(`\n`)
     .map((v) => v.trim());
 
+  const cardTitle = document.getElementById("cardTitle").value || "Bingo!";
   const rows = +document.getElementById("rows").value;
   const cols = +document.getElementById("cols").value;
   const cards = +document.getElementById("cards").value;
@@ -17,7 +18,7 @@ const generate = () => {
 
   const output = [...Array(cards).keys()].map((i) => {
     const shuffled = shuffle(entries);
-    return `<div class='card'><h2>Bingo!</h2><table>
+    return `<div class='card'><h2>${cardTitle}</h2><table>
         ${[...Array(rows).keys()]
           .map((r) => `<tr>
             ${[...Array(cols).keys()]
